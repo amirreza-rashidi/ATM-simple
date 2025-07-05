@@ -1,82 +1,86 @@
-
 #include <iostream>
 #include <string>
-#include<cctype>
+#include <cctype>
 #include <fstream>
 
 using namespace std;
 
-bool have_space(string str) {
-    for (char c: str) {
-        if (isspace(c)) {
-            return 1;
-        } else {
-            return 0;
-        }
-
+bool has_space(const string& str) {
+    for (char c : str) {
+        if (isspace(c)) return true;
     }
+    return false;
 }
-bool check_pass(string new_password ,string password) {
-    //int wrong_number{0};
-    if (new_password == password) {
-        return 0;
+
+bool check_pass(const string& entered_password, const string& actual_password) {
+    if (entered_password == actual_password) {
+        return true;
     } else {
-        // wrong_number++;
-        cout<<"wrong password \n";
-        return 1;
+        cout << "Wrong password.\n";
+        return false;
     }
-
 }
-
 
 int main() {
-    string password;
-    string password1;
+    string password, password_confirm, entered_password;
 
-    string new_password;
-
-    while (1) {
-        cout << "please eneter your password :";
+    // مرحله تعریف پسورد اولیه
+    while (true) {
+        cout << "Set your password: ";
         getline(cin, password);
 
-        if (password.empty() == 1 || have_space(password) == 1) {
-            cout << " empty" << endl;
+        if (password.empty()) {
+            cout << "Password can't be empty.\n";
+        } else if (has_space(password)) {
+            cout << "Password shouldn't contain spaces.\n";
         } else if (password.length() <= 5) {
-            cout << " more than 5 char ";
+            cout << "Password must be longer than 5 characters.\n";
         } else {
             break;
         }
     }
 
+    // تأیید پسورد
+    while (true) {
+        cout << "Re-enter your password: ";
+        getline(cin, password_confirm);
+        if (password == password_confirm) {
+            cout << "Password confirmed successfully.\n";
+            break;
+        } else {
+            cout << "Passwords do not match. Try again.\n";
+        }
+    }
+
+    // ذخیره در فایل
     ofstream outFile("saved3.txt");
-    outFile<<password <<endl;
-
-    cout << "please eneter your password again :";
-    cin >> password1;
-
-
-    while (1) {
-        if (password == password1) {
-            cout << " password changes successfully \n";
-            break;
-        } else {
-            cout << "  wrong ! \n  please enter your pass word again : " << endl;
-            cin >> password1;
-        }
+    if (!outFile) {
+        cerr << "Error opening file to save password.\n";
+        return 1;
     }
-    int wrong_number{0};
-    while (wrong_number <= 3) {
-        cout << "  enter your password to login :";
-        cin >> new_password;
-        if (check_pass(new_password, password) == 0) {
-            cout << "loged in !";
-            outFile<<"user logged in";
+    outFile << "Saved password: " << password << endl;
+
+    // مرحله ورود
+    int attempts = 0;
+    const int max_attempts = 3;
+    while (attempts < max_attempts) {
+        cout << "Enter your password to login: ";
+        getline(cin, entered_password);
+
+        if (check_pass(entered_password, password)) {
+            cout << "Logged in successfully.\n";
+            outFile << "User logged in.\n";
             outFile.close();
             return 0;
         } else {
-            wrong_number++;
+            attempts++;
+            cout << "Attempt " << attempts << " of " << max_attempts << endl;
         }
-
     }
 
+    cout << "Too many failed attempts. Access denied.\n";
+    outFile << "User failed to login after " << max_attempts << " attempts.\n";
+    outFile.close();
+
+    return 0;
 }
